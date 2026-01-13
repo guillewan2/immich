@@ -31,3 +31,5 @@ For detailed documentation, see [monitoring/README.md](monitoring/README.md)
 
 - `validate-monitoring.sh` - Validate configuration before deployment
 - `deploy-with-monitoring.sh` - Interactive deployment script
+- `test-monitoring.sh` - Smoke test to verify monitoring stack is working
+- `MONITORING-QUICKSTART.md` - Quick start guide in Spanish
