@@ -48,11 +48,9 @@ services:
     depends_on:
       influxdb:
         condition: service_healthy
-      database:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     restart: always
+    # Note: Telegraf will connect to database and redis services when they're available
+    # in the same network. Make sure to deploy this with the main Immich stack.
 
   # Loki - Log aggregation system
   loki:
