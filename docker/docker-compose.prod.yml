@@ -80,18 +80,6 @@ services:
     healthcheck:
       disable: false
 
-  # set IMMICH_TELEMETRY_INCLUDE=all in .env to enable metrics
-  immich-prometheus:
-    container_name: immich_prometheus
-    ports:
-      - 9090:9090
-    image: prom/prometheus@sha256:1f0f50f06acaceb0f5670d2c8a658a599affe7b0d8e78b898c1035653849a702
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus-data:/prometheus
-
-  # first login uses admin/admin
-  # add data source for http://immich-prometheus:9090 to get started
   immich-grafana:
     container_name: immich_grafana
     command: ['./run.sh', '-disable-reporting']
@@ -100,8 +88,89 @@ services:
     image: grafana/grafana:12.3.1-ubuntu@sha256:d57f1365197aec34c4d80869d8ca45bb7787c7663904950dab214dfb40c1c2fd
     volumes:
       - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+    env_file:
+      - .env
+    environment:
+      - DOCKER_INFLUXDB_INIT_ORG=${DOCKER_INFLUXDB_INIT_ORG:-immich}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${DOCKER_INFLUXDB_INIT_BUCKET:-immich}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN:-my-super-secret-auth-token}
+    depends_on:
+      - influxdb
+      - loki
+    restart: always
+
+  influxdb:
+    container_name: immich_influxdb
+    image: influxdb:2.7-alpine
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - ./monitoring/influxdb/config:/etc/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${DOCKER_INFLUXDB_INIT_USERNAME:-admin}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${DOCKER_INFLUXDB_INIT_PASSWORD:-password123456}
+      - DOCKER_INFLUXDB_INIT_ORG=${DOCKER_INFLUXDB_INIT_ORG:-immich}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${DOCKER_INFLUXDB_INIT_BUCKET:-immich}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN:-my-super-secret-auth-token}
+    ports:
+      - 8086:8086
+    restart: always
+
+  telegraf:
+    container_name: immich_telegraf
+    image: telegraf:1.29-alpine
+    user: root
+    entrypoint: telegraf
+    pid: host
+    privileged: true
+    volumes:
+      - ./monitoring/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/rootfs/sys:ro
+      - /proc:/rootfs/proc:ro
+      - /etc:/rootfs/etc:ro
+    environment:
+      - HOST_PROC=/rootfs/proc
+      - HOST_SYS=/rootfs/sys
+      - HOST_ETC=/rootfs/etc
+      - DOCKER_INFLUXDB_INIT_ORG=${DOCKER_INFLUXDB_INIT_ORG:-immich}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${DOCKER_INFLUXDB_INIT_BUCKET:-immich}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN:-my-super-secret-auth-token}
+    env_file:
+      - .env
+    depends_on:
+      - influxdb
+    restart: always
+
+  loki:
+    container_name: immich_loki
+    image: grafana/loki:3.3.2
+    user: root
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml
+      - loki-data:/tmp/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - 3100:3100
+    restart: always
+
+  promtail:
+    container_name: immich_promtail
+    image: grafana/promtail:3.3.2
+    volumes:
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/config.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    restart: always
 
 volumes:
   model-cache:
-  prometheus-data:
+  prometheus-data: # Keeping this volume just in case user wants to revert, though service is removed
   grafana-data:
+  influxdb-data:
+  loki-data:

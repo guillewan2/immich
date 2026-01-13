@@ -1,0 +1,21 @@
+apiVersion: 1
+
+datasources:
+  - name: InfluxDB
+    type: influxdb
+    uid: ef8gkv3lzo0lcc
+    access: proxy
+    url: http://influxdb:8086
+    jsonData:
+      version: Flux
+      organization: immich
+      defaultBucket: immich
+      tlsSkipVerify: true
+    secureJsonData:
+      token: my-super-secret-auth-token
+
+  - name: Loki
+    type: loki
+    uid: af8r4ktgyqoe8b
+    access: proxy
+    url: http://loki:3100
