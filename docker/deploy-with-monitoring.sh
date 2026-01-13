@@ -38,6 +38,18 @@ if ! grep -q "^INFLUXDB_TOKEN=" .env; then
     exit 1
 fi
 
+# Check if the token is not a default/placeholder value
+INFLUXDB_TOKEN=$(grep "^INFLUXDB_TOKEN=" .env | cut -d'=' -f2)
+if [ -z "$INFLUXDB_TOKEN" ] || [ "$INFLUXDB_TOKEN" = "immich-monitoring-token-change-me" ]; then
+    echo -e "${YELLOW}⚠${NC} INFLUXDB_TOKEN is using default value"
+    echo "It's recommended to change this to a secure random token in production"
+    read -p "Continue anyway? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+fi
+
 echo "📋 Configuration check passed"
 echo ""
 

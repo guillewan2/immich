@@ -112,8 +112,18 @@ if [ -f "${MONITORING_DIR}/grafana/provisioning/dashboards/immich-dashboard.json
     if python3 -m json.tool "${MONITORING_DIR}/grafana/provisioning/dashboards/immich-dashboard.json" > /dev/null 2>&1; then
         echo -e "${GREEN}✓${NC} Dashboard JSON is valid"
         
-        # Count panels
-        PANEL_COUNT=$(python3 -c "import json; data=json.load(open('${MONITORING_DIR}/grafana/provisioning/dashboards/immich-dashboard.json')); print(len(data.get('panels', [])))")
+        # Count panels using a safer approach
+        PANEL_COUNT=$(python3 -c "
+import json
+import sys
+try:
+    with open('${MONITORING_DIR}/grafana/provisioning/dashboards/immich-dashboard.json', 'r') as f:
+        data = json.load(f)
+        print(len(data.get('panels', [])))
+except Exception as e:
+    print('0')
+    sys.exit(1)
+")
         echo -e "  ${GREEN}→${NC} Dashboard contains ${PANEL_COUNT} panels"
         
         # Check for datasources

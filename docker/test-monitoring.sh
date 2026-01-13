@@ -95,7 +95,7 @@ echo "📈 Checking Data Collection..."
 
 # Check if Telegraf is collecting metrics
 echo -n "Checking if Telegraf is collecting metrics... "
-if docker logs immich_telegraf 2>&1 | tail -20 | grep -q "error\|fail" ; then
+if docker logs immich_telegraf 2>&1 | tail -20 | grep -qi "error\|fail" ; then
     echo -e "${YELLOW}⚠${NC} Telegraf might have errors (check logs)"
 else
     echo -e "${GREEN}✓${NC}"
@@ -103,7 +103,7 @@ fi
 
 # Check if Promtail is collecting logs
 echo -n "Checking if Promtail is collecting logs... "
-if docker logs immich_promtail 2>&1 | tail -20 | grep -q "error\|fail" ; then
+if docker logs immich_promtail 2>&1 | tail -20 | grep -qi "error\|fail" ; then
     echo -e "${YELLOW}⚠${NC} Promtail might have errors (check logs)"
 else
     echo -e "${GREEN}✓${NC}"
