@@ -1,0 +1,31 @@
+name: Test Monitoring Stack Configuration
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'docker/**'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'docker/**'
+
+jobs:
+  validate-compose:
+    name: Validate Docker Compose
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create dummy .env file
+        run: |
+          touch docker/.env
+          echo "DB_PASSWORD=dummy" >> docker/.env
+          echo "DB_USERNAME=dummy" >> docker/.env
+          echo "DB_DATABASE_NAME=dummy" >> docker/.env
+
+      - name: Validate Docker Compose Config
+        run: |
+          cd docker
+          docker compose -f docker-compose.prod.yml config
