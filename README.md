@@ -104,6 +104,19 @@ Access the demo [here](https://demo.immich.app). For the mobile app, you can use
 | Tags                                         | No     | Yes |
 | Folder View                                  | Yes    | Yes |
 
+
+## Monitoring Stack
+
+This project includes a comprehensive observability stack to monitor the health and performance of the Immich services:
+
+- **Grafana**: Visualization dashboard accessible at `http://localhost:3000` (Default: `admin`/`admin`).
+- **InfluxDB**: Time-series database storing metrics from the system and containers.
+- **Telegraf**: Collects metrics from:
+  - System (CPU, RAM, Disk, Net)
+  - Docker Containers (resource usage)
+  - Redis & PostgreSQL
+- **Loki & Promtail**: Centralized logging system. Promtail scrapes logs from all Docker containers and pushes them to Loki, which can be queried in Grafana.
+
 ## Translations
 
 Read more about translations [here](https://docs.immich.app/developer/translations).
