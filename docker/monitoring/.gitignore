@@ -1,0 +1,11 @@
+# Ignore any local configuration overrides
+*.local.yml
+*.local.conf
+
+# Ignore any data directories if they're created locally
+data/
+logs/
+
+# Ignore backup files
+*.backup
+*.bak
